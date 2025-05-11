@@ -5,7 +5,11 @@ spring:
   application:
     name: GATEWAY-SERVICE
 
-  cloud:
+  jwt:
+    secret: 1j5Jz2+wg1jIs6dVM4RBEdGAvopKfucrwf5h/VzNsJS/VbEsT/FO32FW+5Hd6uiwE2PQumMJTtxOvrtbi/kHyA==
+
+
+cloud:
     gateway:
       routes:
         - id: auth-service
