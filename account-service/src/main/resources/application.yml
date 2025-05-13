@@ -15,7 +15,7 @@ spring:
     hibernate:
       ddl-auto: none       # Flyway va gérer le schéma, donc laissez toujours ddl-auto à "none" en production
     show-sql: true         # Active logging SQL
-    open-in-view: false    # Empêche les problèmes de session Hibernate
+    open-in-view: false    # Empêche les problèmes de session Hibernate v
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQLDialect

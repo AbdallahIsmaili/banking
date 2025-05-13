@@ -27,4 +27,5 @@ public interface NotificationClient {
     @PostMapping("/api/notifications/account-closed/{clientId}")
     void sendAccountClosureNotification(@PathVariable("clientId") Long clientId,
                                         @RequestParam("accountNumber") String accountNumber);
+
 }
