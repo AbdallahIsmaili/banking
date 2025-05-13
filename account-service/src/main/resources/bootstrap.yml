@@ -1,0 +1,14 @@
+spring:
+  application:
+    name: account-service
+  cloud:
+    config:
+      discovery:
+        enabled: true
+        service-id: config-server
+      fail-fast: true
+      retry:
+        initial-interval: 1000
+        max-attempts: 6
+        max-interval: 2000
+        multiplier: 1.1
