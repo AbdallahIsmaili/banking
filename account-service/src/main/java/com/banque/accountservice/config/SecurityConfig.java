@@ -2,6 +2,7 @@ package com.banque.accountservice.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -18,15 +19,34 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authorize ->
                         authorize
                                 .requestMatchers("/actuator/**").permitAll()
-                                // Development access - allow all API requests without authentication
-                                .requestMatchers("/api/**").permitAll()
-                                // In production, you should replace this with proper authentication
+                                .requestMatchers(HttpMethod.GET, "/api/accounts/client/**").hasAnyAuthority(SecurityConstants.ROLE_CLIENT, SecurityConstants.ROLE_BANKER, SecurityConstants.ROLE_ADMIN)
+                                .requestMatchers(HttpMethod.GET, "/api/accounts/**").hasAnyAuthority(SecurityConstants.ROLE_BANKER, SecurityConstants.ROLE_ADMIN)
+                                .requestMatchers(HttpMethod.POST, "/api/accounts").hasAnyAuthority(SecurityConstants.ROLE_BANKER, SecurityConstants.ROLE_ADMIN)
+                                .requestMatchers(HttpMethod.PUT, "/api/accounts/**").hasAnyAuthority(SecurityConstants.ROLE_BANKER, SecurityConstants.ROLE_ADMIN)
                                 .anyRequest().authenticated()
                 )
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 );
 
-        return http.build();  // This return statement was missing in your code
+        /*
+        @Bean
+public JwtDecoder jwtDecoder() {
+    return NimbusJwtDecoder.withPublicKey(rsaPublicKey).build();
+}
+
+@Bean
+public JwtAuthenticationConverter jwtAuthenticationConverter() {
+    JwtGrantedAuthoritiesConverter grantedAuthoritiesConverter = new JwtGrantedAuthoritiesConverter();
+    grantedAuthoritiesConverter.setAuthoritiesClaimName("roles");
+    grantedAuthoritiesConverter.setAuthorityPrefix("");
+
+    JwtAuthenticationConverter jwtAuthenticationConverter = new JwtAuthenticationConverter();
+    jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(grantedAuthoritiesConverter);
+    return jwtAuthenticationConverter;
+}
+         */
+
+        return http.build();
     }
 }
