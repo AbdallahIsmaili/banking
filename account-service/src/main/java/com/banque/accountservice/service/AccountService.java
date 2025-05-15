@@ -1,13 +1,22 @@
 package com.banque.accountservice.service;
 
-import com.banque.accountservice.dto.AccountCreationDTO;
-import com.banque.accountservice.dto.AccountDTO;
+import com.banque.accountservice.dto.*;
 import com.banque.accountservice.dto.AccountResponseDTO;
+import com.banque.accountservice.model.AccountType;
+
 
 import java.math.BigDecimal;
 import java.util.List;
 
 public interface AccountService {
+
+    /**
+     * Update account information
+     *
+     * @param accountUpdateDTO The updated account information
+     * @return Updated account details
+     */
+    AccountDTO updateAccountInfo(AccountUpdateDTO accountUpdateDTO);
 
     /**
      * Create a new account for a client
@@ -42,6 +51,14 @@ public interface AccountService {
     List<AccountDTO> getAccountsByClientId(Long clientId);
 
     /**
+     * Retrieves accounts by account type
+     *
+     * @param accountType Account type
+     * @return List of accounts
+     */
+    List<AccountResponseDTO> getAccountsByType(AccountType accountType);
+
+    /**
      * Get all active accounts for a client
      *
      * @param clientId The client ID
@@ -57,6 +74,17 @@ public interface AccountService {
      * @return Updated account details
      */
     AccountDTO updateBalance(String accountNumber, BigDecimal amount);
+
+
+    /**
+     * Updates account active status
+     *
+     * @param accountId Account ID
+     * @param active New active status
+     * @return Updated account details
+     */
+    AccountResponseDTO updateAccountStatus(Long accountId, boolean active);
+
 
     /**
      * Close an account

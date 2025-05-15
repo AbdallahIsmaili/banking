@@ -1,6 +1,7 @@
 package com.banque.accountservice.repository;
 
 import com.banque.accountservice.model.Account;
+import com.banque.accountservice.model.AccountType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -22,4 +23,7 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
     List<Account> findActiveAccountsByClientId(@Param("clientId") Long clientId);
 
     boolean existsByAccountNumber(String accountNumber);
-}
+
+    List<Account> findByAccountType(AccountType accountType);
+
+ }
