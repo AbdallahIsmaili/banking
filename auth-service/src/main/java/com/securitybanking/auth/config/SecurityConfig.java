@@ -1,6 +1,7 @@
 package com.securitybanking.auth.config;
 
 import com.securitybanking.auth.security.JwtFilter;
+import com.securitybanking.auth.security.OAuth2SuccessHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -16,9 +17,11 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     private final JwtFilter jwtFilter;
+    private final OAuth2SuccessHandler oAuth2SuccessHandler;
 
-    public SecurityConfig(JwtFilter jwtFilter) {
+    public SecurityConfig(JwtFilter jwtFilter, OAuth2SuccessHandler oAuth2SuccessHandler) {
         this.jwtFilter = jwtFilter;
+        this.oAuth2SuccessHandler = oAuth2SuccessHandler;
     }
 
     @Bean
@@ -30,8 +33,13 @@ public class SecurityConfig {
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**").permitAll() // ✅ Allow auth endpoints
+                        .requestMatchers("/api/auth/**", "/login/**", "/oauth2/**").permitAll() // Allow auth endpoints and OAuth2
                         .anyRequest().authenticated()
+                )
+                .oauth2Login(oauth2 -> oauth2
+                        .successHandler(oAuth2SuccessHandler)
+                        .authorizationEndpoint(endpoint -> endpoint.baseUri("/oauth2/authorize"))
+                        .redirectionEndpoint(endpoint -> endpoint.baseUri("/oauth2/callback/*"))
                 )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
