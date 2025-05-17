@@ -32,9 +32,9 @@ spring:
 jwt:
   secret: EEQLjAtCuNXlnTiKAvGxrWOeNAQ1vDUFwYo9w2kmAzIPY8U/7bjeyUGEb4GKAgD3xZVVZtjM3zXibMWHndfU8A==
   accessToken:
-    expiration: 900000
+    expiration: 900000  # 15 minutes
   refreshToken:
-    expiration: 86400000
+    expiration: 86400000  # 24 hours
 
 security:
   password:
@@ -51,7 +51,12 @@ logging:
     org.springframework.security: DEBUG
     com.securitybanking: DEBUG
     org.springframework.security.oauth2: DEBUG
+    org.springframework.web: DEBUG
 
 # Frontend URL for OAuth2 redirect
 frontend:
   url: http://localhost:3000
+
+# CORS Configuration
+cors:
+  allowed-origins: http://localhost:3000

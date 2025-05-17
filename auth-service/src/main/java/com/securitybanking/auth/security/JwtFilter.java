@@ -32,6 +32,7 @@ public class JwtFilter extends OncePerRequestFilter {
             "/api/auth/register",
             "/api/auth/login",
             "/api/auth/refresh",
+            "/api/auth/",
             "/oauth2",
             "/login",
             "/api/test/public",
@@ -51,8 +52,10 @@ public class JwtFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getRequestURI();
+        log.debug("Request path: {}", path);
         for (String publicPath : PUBLIC_PATHS) {
             if (path.startsWith(publicPath)) {
+                log.debug("Path {} is public, skipping filter", path);
                 return true;
             }
         }
@@ -65,62 +68,73 @@ public class JwtFilter extends OncePerRequestFilter {
             HttpServletResponse response,
             FilterChain filterChain
     ) throws ServletException, IOException {
+        try {
+            // Skip if the user is already authenticated via OAuth2
+            if (SecurityContextHolder.getContext().getAuthentication() instanceof OAuth2AuthenticationToken) {
+                log.debug("User already authenticated via OAuth2");
+                filterChain.doFilter(request, response);
+                return;
+            }
 
-        // Skip if the user is already authenticated via OAuth2
-        if (SecurityContextHolder.getContext().getAuthentication() instanceof OAuth2AuthenticationToken) {
+            final String authHeader = request.getHeader("Authorization");
+            String email = null;
+            String jwt = null;
+
+            if (StringUtils.hasText(authHeader) && authHeader.startsWith("Bearer ")) {
+                jwt = authHeader.substring(7);
+                log.debug("Found JWT token in Authorization header");
+
+                // Check if token is blacklisted
+                if (blacklistedTokenRepository.existsByToken(jwt)) {
+                    log.warn("Token is blacklisted");
+                    response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Token is blacklisted");
+                    return;
+                }
+
+                try {
+                    email = jwtUtil.extractEmail(jwt);
+                    log.debug("Extracted email from JWT: {}", email);
+                } catch (ExpiredJwtException ex) {
+                    log.warn("JWT token expired: {}", ex.getMessage());
+                    response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Token expired");
+                    return;
+                } catch (SignatureException ex) {
+                    log.warn("Invalid JWT signature: {}", ex.getMessage());
+                    response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid token");
+                    return;
+                } catch (JwtException | IllegalArgumentException ex) {
+                    log.warn("JWT token error: {}", ex.getMessage());
+                    response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid token");
+                    return;
+                }
+            } else {
+                log.debug("No JWT token found in request headers");
+                filterChain.doFilter(request, response);
+                return;
+            }
+
+            if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                var userOptional = userRepository.findByEmail(email);
+
+                if (userOptional.isPresent() && jwtUtil.validateToken(jwt, email)) {
+                    var user = userOptional.get();
+                    log.debug("JWT token valid for user: {}", email);
+                    var authentication = new UsernamePasswordAuthenticationToken(
+                            new User(user.getEmail(), user.getPassword(), Collections.emptyList()),
+                            null,
+                            Collections.emptyList()
+                    );
+                    authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                } else {
+                    log.debug("JWT token validation failed for email: {}", email);
+                }
+            }
+
             filterChain.doFilter(request, response);
-            return;
+        } catch (Exception ex) {
+            log.error("Exception occurred during JWT filter: ", ex);
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Internal server error");
         }
-
-        final String authHeader = request.getHeader("Authorization");
-        String email = null;
-        String jwt = null;
-
-        if (StringUtils.hasText(authHeader) && authHeader.startsWith("Bearer ")) {
-            jwt = authHeader.substring(7);
-
-            // Check if token is blacklisted
-            if (blacklistedTokenRepository.existsByToken(jwt)) {
-                log.warn("Token is blacklisted");
-                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Token is blacklisted");
-                return;
-            }
-
-            try {
-                email = jwtUtil.extractEmail(jwt);
-            } catch (ExpiredJwtException ex) {
-                log.warn("JWT token expired: {}", ex.getMessage());
-                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Token expired");
-                return;
-            } catch (SignatureException ex) {
-                log.warn("Invalid JWT signature: {}", ex.getMessage());
-                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid token");
-                return;
-            } catch (JwtException | IllegalArgumentException ex) {
-                log.warn("JWT token error: {}", ex.getMessage());
-                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid token");
-                return;
-            }
-        } else {
-            filterChain.doFilter(request, response);
-            return;
-        }
-
-        if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            var userOptional = userRepository.findByEmail(email);
-
-            if (userOptional.isPresent() && jwtUtil.validateToken(jwt, email)) {
-                var user = userOptional.get();
-                var authentication = new UsernamePasswordAuthenticationToken(
-                        new User(user.getEmail(), user.getPassword(), Collections.emptyList()),
-                        null,
-                        Collections.emptyList()
-                );
-                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authentication);
-            }
-        }
-
-        filterChain.doFilter(request, response);
     }
 }

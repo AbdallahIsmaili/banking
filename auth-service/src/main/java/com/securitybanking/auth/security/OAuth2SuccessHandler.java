@@ -48,7 +48,7 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         
         String email = (String) attributes.get("email");
         // Handle the case where name might be in a different attribute depending on the provider
-        String name = null;
+        String name;
         if (attributes.containsKey("name")) {
             name = (String) attributes.get("name");
         } else if (attributes.containsKey("given_name") && attributes.containsKey("family_name")) {
@@ -56,20 +56,23 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         } else {
             name = email.substring(0, email.indexOf('@'));
         }
+        final String finalName = name;
+        final String finalEmail = email;
+
 
         try {
             // Look for the user in our database or create them
-            AppUser user = userRepository.findByEmail(email)
+            AppUser user = userRepository.findByEmail(finalEmail)
                     .orElseGet(() -> {
                         AppUser newUser = new AppUser();
-                        newUser.setEmail(email);
-                        newUser.setFullname(name);
-                        // Use a random secure password since they'll use OAuth to log in
+                        newUser.setEmail(finalEmail);
+                        newUser.setFullname(finalName);
                         newUser.setPassword("{oauth2}");
                         newUser.setRole(UserRole.USER);
                         newUser.setEnabled(true);
                         return userRepository.save(newUser);
                     });
+
 
             // Update last login
             user.setLastLogin(LocalDateTime.now());

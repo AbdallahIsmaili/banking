@@ -1,10 +1,13 @@
 package com.securitybanking.auth.security;
 
-import com.securitybanking.auth.entity.UserRole;
 import io.jsonwebtoken.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import com.securitybanking.auth.entity.UserRole;
+import io.jsonwebtoken.security.Keys;
+
+import java.security.Key;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -23,7 +26,7 @@ public class JwtUtil {
 
     public String generateAccessToken(String email, UserRole role) {
         Map<String, Object> claims = new HashMap<>();
-        claims.put("role", role.name());  // Changed from toString() to name()
+        claims.put("role", role.name());
         return buildToken(claims, email, accessTokenExpiration);
     }
 
@@ -37,8 +40,13 @@ public class JwtUtil {
                 .setSubject(subject)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + expiration))
-                .signWith(SignatureAlgorithm.HS512, secret.getBytes())
+                .signWith(getSigningKey(), SignatureAlgorithm.HS512)
                 .compact();
+    }
+
+    private Key getSigningKey() {
+        byte[] keyBytes = secret.getBytes();
+        return Keys.hmacShaKeyFor(keyBytes);
     }
 
     public String extractEmail(String token) {
@@ -47,7 +55,7 @@ public class JwtUtil {
 
     public UserRole extractRole(String token) {
         String role = extractClaim(token, claims -> claims.get("role", String.class));
-        return UserRole.fromString(role);
+        return (role != null) ? UserRole.fromString(role) : UserRole.USER;
     }
 
     public Date extractExpiration(String token) {
@@ -60,7 +68,11 @@ public class JwtUtil {
     }
 
     private Claims extractAllClaims(String token) {
-        return Jwts.parser().setSigningKey(secret.getBytes()).parseClaimsJws(token).getBody();
+        return Jwts.parserBuilder()
+                .setSigningKey(getSigningKey())
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
     }
 
     public boolean isTokenExpired(String token) {
