@@ -10,6 +10,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 @Configuration
 @EnableWebSecurity
@@ -30,9 +31,24 @@ public class SecurityConfig {
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authorizeHttpRequests(auth -> auth
+<<<<<<< Updated upstream
                         .requestMatchers("/api/auth/**").permitAll() // ✅ Allow auth endpoints
                         .anyRequest().authenticated()
                 )
+=======
+                        .requestMatchers("/api/auth/**").permitAll() // Public API endpoints
+                        .requestMatchers(new AntPathRequestMatcher("/login/**")).permitAll()
+                        .requestMatchers(new AntPathRequestMatcher("/oauth2/**")).permitAll()
+                        .requestMatchers("/").permitAll() // Home page
+                        .requestMatchers("/error").permitAll() // Error pages
+                        .anyRequest().authenticated()
+                )
+                .oauth2Login(oauth2 -> oauth2
+                        .successHandler(oAuth2SuccessHandler)
+                        .authorizationEndpoint(endpoint -> endpoint.baseUri("/oauth2/authorize"))
+                        .redirectionEndpoint(endpoint -> endpoint.baseUri("/login/oauth2/code/*")) // Default Spring Security OAuth2 callback path
+                )
+>>>>>>> Stashed changes
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

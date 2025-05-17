@@ -15,6 +15,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -32,6 +34,14 @@ public class AuthController {
         this.authService = authService;
         this.jwtUtil = jwtUtil;
         this.blacklistedTokenRepository = blacklistedTokenRepository;
+    }
+
+    @GetMapping("/")
+    public Map<String, String> home() {
+        Map<String, String> response = new HashMap<>();
+        response.put("status", "API is running");
+        response.put("message", "Welcome to Security Banking Authentication Service");
+        return response;
     }
 
     @PostMapping("/register")

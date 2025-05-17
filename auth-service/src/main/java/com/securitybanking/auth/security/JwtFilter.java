@@ -20,11 +20,21 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.List;
 
 @Component
 public class JwtFilter extends OncePerRequestFilter {
 
     private static final Logger log = LoggerFactory.getLogger(JwtFilter.class);
+    private static final List<String> PUBLIC_PATHS = List.of(
+            "/api/auth/register",
+            "/api/auth/login",
+            "/api/auth/refresh",
+            "/oauth2",
+            "/login",
+            "/api/test/public",
+            "/"
+    );
 
     private final JwtUtil jwtUtil;
     private final UserRepository userRepository;
@@ -37,11 +47,34 @@ public class JwtFilter extends OncePerRequestFilter {
     }
 
     @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        String path = request.getRequestURI();
+
+        // Skip filter for public paths
+        for (String publicPath : PUBLIC_PATHS) {
+            if (path.startsWith(publicPath)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    @Override
     protected void doFilterInternal(
             HttpServletRequest request,
             HttpServletResponse response,
             FilterChain filterChain
     ) throws ServletException, IOException {
+<<<<<<< Updated upstream
+=======
+        // Skip if the user is already authenticated via OAuth2
+        if (SecurityContextHolder.getContext().getAuthentication() instanceof OAuth2AuthenticationToken) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+>>>>>>> Stashed changes
         final String authHeader = request.getHeader("Authorization");
         String email = null;
         String jwt = null;
@@ -71,6 +104,11 @@ public class JwtFilter extends OncePerRequestFilter {
                 response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid token");
                 return;
             }
+        } else {
+            // No Authorization header or not a Bearer token
+            // Let Spring Security handle this case
+            filterChain.doFilter(request, response);
+            return;
         }
 
         if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
