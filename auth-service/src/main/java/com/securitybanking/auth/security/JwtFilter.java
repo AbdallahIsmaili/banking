@@ -14,8 +14,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
@@ -49,14 +51,11 @@ public class JwtFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getRequestURI();
-
-        // Skip filter for public paths
         for (String publicPath : PUBLIC_PATHS) {
             if (path.startsWith(publicPath)) {
                 return true;
             }
         }
-
         return false;
     }
 
@@ -66,20 +65,18 @@ public class JwtFilter extends OncePerRequestFilter {
             HttpServletResponse response,
             FilterChain filterChain
     ) throws ServletException, IOException {
-<<<<<<< Updated upstream
-=======
+
         // Skip if the user is already authenticated via OAuth2
         if (SecurityContextHolder.getContext().getAuthentication() instanceof OAuth2AuthenticationToken) {
             filterChain.doFilter(request, response);
             return;
         }
 
->>>>>>> Stashed changes
         final String authHeader = request.getHeader("Authorization");
         String email = null;
         String jwt = null;
 
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+        if (StringUtils.hasText(authHeader) && authHeader.startsWith("Bearer ")) {
             jwt = authHeader.substring(7);
 
             // Check if token is blacklisted
@@ -105,8 +102,6 @@ public class JwtFilter extends OncePerRequestFilter {
                 return;
             }
         } else {
-            // No Authorization header or not a Bearer token
-            // Let Spring Security handle this case
             filterChain.doFilter(request, response);
             return;
         }

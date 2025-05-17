@@ -21,12 +21,12 @@ import java.util.Map;
 
 @Component
 public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
-
+    
     private static final Logger logger = LoggerFactory.getLogger(OAuth2SuccessHandler.class);
 
     private final UserRepository userRepository;
     private final JwtUtil jwtUtil;
-
+    
     @Value("${frontend.url:http://localhost:3000}")
     private String frontendUrl;
 
@@ -45,10 +45,10 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         // Get user details from OAuth provider
         Map<String, Object> attributes = oAuth2User.getAttributes();
         logger.debug("OAuth2 attributes: {}", attributes);
-
+        
         String email = (String) attributes.get("email");
         // Handle the case where name might be in a different attribute depending on the provider
-        String name;
+        String name = null;
         if (attributes.containsKey("name")) {
             name = (String) attributes.get("name");
         } else if (attributes.containsKey("given_name") && attributes.containsKey("family_name")) {
@@ -56,23 +56,20 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         } else {
             name = email.substring(0, email.indexOf('@'));
         }
-        final String finalName = name;
-        final String finalEmail = email;
-
 
         try {
             // Look for the user in our database or create them
-            AppUser user = userRepository.findByEmail(finalEmail)
+            AppUser user = userRepository.findByEmail(email)
                     .orElseGet(() -> {
                         AppUser newUser = new AppUser();
-                        newUser.setEmail(finalEmail);
-                        newUser.setFullname(finalName);
+                        newUser.setEmail(email);
+                        newUser.setFullname(name);
+                        // Use a random secure password since they'll use OAuth to log in
                         newUser.setPassword("{oauth2}");
                         newUser.setRole(UserRole.USER);
                         newUser.setEnabled(true);
                         return userRepository.save(newUser);
                     });
-
 
             // Update last login
             user.setLastLogin(LocalDateTime.now());
@@ -90,7 +87,7 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
             // In production, consider using a more secure method
             String frontendRedirectUrl = frontendUrl + "/oauth-success?token=" +
                     accessToken + "&refreshToken=" + refreshToken;
-
+            
             logger.debug("Redirecting to: {}", frontendRedirectUrl);
             getRedirectStrategy().sendRedirect(request, response, frontendRedirectUrl);
         } catch (Exception e) {

@@ -1,6 +1,7 @@
 package com.securitybanking.auth.config;
 
 import com.securitybanking.auth.security.JwtFilter;
+import com.securitybanking.auth.security.OAuth2SuccessHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -17,39 +18,34 @@ import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 public class SecurityConfig {
 
     private final JwtFilter jwtFilter;
+    private final OAuth2SuccessHandler oAuth2SuccessHandler;
 
-    public SecurityConfig(JwtFilter jwtFilter) {
+    public SecurityConfig(JwtFilter jwtFilter, OAuth2SuccessHandler oAuth2SuccessHandler) {
         this.jwtFilter = jwtFilter;
+        this.oAuth2SuccessHandler = oAuth2SuccessHandler;
     }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        // Modern lambda-based configuration
         http
-                .csrf(csrf -> csrf.disable())
-                .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                )
-                .authorizeHttpRequests(auth -> auth
-<<<<<<< Updated upstream
-                        .requestMatchers("/api/auth/**").permitAll() // ✅ Allow auth endpoints
-                        .anyRequest().authenticated()
-                )
-=======
-                        .requestMatchers("/api/auth/**").permitAll() // Public API endpoints
-                        .requestMatchers(new AntPathRequestMatcher("/login/**")).permitAll()
-                        .requestMatchers(new AntPathRequestMatcher("/oauth2/**")).permitAll()
-                        .requestMatchers("/").permitAll() // Home page
-                        .requestMatchers("/error").permitAll() // Error pages
-                        .anyRequest().authenticated()
-                )
-                .oauth2Login(oauth2 -> oauth2
-                        .successHandler(oAuth2SuccessHandler)
-                        .authorizationEndpoint(endpoint -> endpoint.baseUri("/oauth2/authorize"))
-                        .redirectionEndpoint(endpoint -> endpoint.baseUri("/login/oauth2/code/*")) // Default Spring Security OAuth2 callback path
-                )
->>>>>>> Stashed changes
-                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+            .csrf(csrf -> csrf.disable())
+            .sessionManagement(session -> session
+                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+            )
+            .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/api/auth/**").permitAll() // Public API endpoints
+                .requestMatchers(new AntPathRequestMatcher("/login/**")).permitAll()
+                .requestMatchers(new AntPathRequestMatcher("/oauth2/**")).permitAll()
+                .requestMatchers("/").permitAll() // Home page
+                .requestMatchers("/error").permitAll() // Error pages
+                .anyRequest().authenticated()
+            )
+            .oauth2Login(oauth2 -> oauth2
+                .successHandler(oAuth2SuccessHandler)
+                .authorizationEndpoint(endpoint -> endpoint.baseUri("/oauth2/authorize"))
+                .redirectionEndpoint(endpoint -> endpoint.baseUri("/login/oauth2/code/*")) // Default callback path
+            )
+            .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

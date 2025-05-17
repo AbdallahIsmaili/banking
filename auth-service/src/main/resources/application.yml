@@ -17,8 +17,6 @@ spring:
         format_sql: true
   application:
     name: AUTH-SERVICE
-<<<<<<< Updated upstream
-=======
   security:
     oauth2:
       client:
@@ -30,7 +28,6 @@ spring:
               - email
               - profile
             redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
->>>>>>> Stashed changes
 
 jwt:
   secret: EEQLjAtCuNXlnTiKAvGxrWOeNAQ1vDUFwYo9w2kmAzIPY8U/7bjeyUGEb4GKAgD3xZVVZtjM3zXibMWHndfU8A==
@@ -53,11 +50,8 @@ logging:
   level:
     org.springframework.security: DEBUG
     com.securitybanking: DEBUG
-<<<<<<< Updated upstream
-=======
     org.springframework.security.oauth2: DEBUG
 
 # Frontend URL for OAuth2 redirect
 frontend:
   url: http://localhost:3000
->>>>>>> Stashed changes

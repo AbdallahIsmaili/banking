@@ -81,4 +81,11 @@ public class AuthController {
     public ResponseEntity<UserProfileResponse> getProfile(Authentication authentication) {
         return ResponseEntity.ok(authService.getUserProfile(authentication.getName()));
     }
+
+    @GetMapping("/oauth2/success")
+    public ResponseEntity<String> oauthSuccess() {
+        // This endpoint is just to confirm the OAuth2 flow completed successfully
+        // Actual redirects are handled by OAuth2SuccessHandler
+        return ResponseEntity.ok("OAuth2 authentication successful");
+    }
 }
