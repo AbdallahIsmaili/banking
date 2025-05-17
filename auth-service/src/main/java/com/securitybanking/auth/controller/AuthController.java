@@ -78,8 +78,24 @@ public class AuthController {
     }
 
     @GetMapping("/profile")
-    public ResponseEntity<UserProfileResponse> getProfile(Authentication authentication) {
-        return ResponseEntity.ok(authService.getUserProfile(authentication.getName()));
+    public ResponseEntity<UserProfileResponse> getProfile(HttpServletRequest request) {
+        // Use HttpServletRequest instead of relying on Spring's Authentication object
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            String token = authHeader.substring(7);
+            try {
+                String email = jwtUtil.extractEmail(token);
+                if (email != null && !jwtUtil.isTokenExpired(token) && !blacklistedTokenRepository.existsByToken(token)) {
+                    return ResponseEntity.ok(authService.getUserProfile(email));
+                }
+            } catch (Exception e) {
+                // Log the exception
+                System.err.println("Error processing token: " + e.getMessage());
+            }
+        }
+
+        // If reaching here, authentication failed
+        return ResponseEntity.status(401).build();
     }
 
     @GetMapping("/oauth2/success")

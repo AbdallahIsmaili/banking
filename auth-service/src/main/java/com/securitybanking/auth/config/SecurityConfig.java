@@ -40,7 +40,8 @@ public class SecurityConfig {
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**").permitAll() // Public API endpoints
+                        .requestMatchers("/api/auth/login", "/api/auth/register", "/api/auth/refresh").permitAll()
+                        .requestMatchers("/api/auth/").permitAll() // Public API endpoints
                         .requestMatchers("/").permitAll() // Home page
                         .requestMatchers("/error").permitAll() // Error pages
                         .requestMatchers(new AntPathRequestMatcher("/login/**")).permitAll()

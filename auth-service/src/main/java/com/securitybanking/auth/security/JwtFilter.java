@@ -12,6 +12,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
@@ -53,6 +54,14 @@ public class JwtFilter extends OncePerRequestFilter {
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getRequestURI();
         log.debug("Request path: {}", path);
+
+        // Always check Authorization header for JWT tokens regardless of path
+        String authHeader = request.getHeader("Authorization");
+        if (StringUtils.hasText(authHeader) && authHeader.startsWith("Bearer ")) {
+            return false; // Always process when a token is provided
+        }
+
+        // Skip filter for public paths without tokens
         for (String publicPath : PUBLIC_PATHS) {
             if (path.startsWith(publicPath)) {
                 log.debug("Path {} is public, skipping filter", path);
@@ -119,10 +128,16 @@ public class JwtFilter extends OncePerRequestFilter {
                 if (userOptional.isPresent() && jwtUtil.validateToken(jwt, email)) {
                     var user = userOptional.get();
                     log.debug("JWT token valid for user: {}", email);
+
+                    // Create granted authorities from the user role
+                    var authorities = Collections.singletonList(
+                            new SimpleGrantedAuthority("ROLE_" + user.getRole().name())
+                    );
+
                     var authentication = new UsernamePasswordAuthenticationToken(
-                            new User(user.getEmail(), user.getPassword(), Collections.emptyList()),
-                            null,
-                            Collections.emptyList()
+                            email, // Use email as principal instead of User object
+                            null,  // No credentials needed here
+                            authorities
                     );
                     authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authentication);
