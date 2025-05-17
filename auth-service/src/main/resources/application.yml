@@ -17,6 +17,16 @@ spring:
         format_sql: true
   application:
     name: AUTH-SERVICE
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: 1098580004709-ur38elak0t7i9c8gvmnunchhkpjje4dm.apps.googleusercontent.com
+            client-secret: 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
+            scope:
+              - email
+              - profile
 
 jwt:
   secret: EEQLjAtCuNXlnTiKAvGxrWOeNAQ1vDUFwYo9w2kmAzIPY8U/7bjeyUGEb4GKAgD3xZVVZtjM3zXibMWHndfU8A==
@@ -39,3 +49,4 @@ logging:
   level:
     org.springframework.security: DEBUG
     com.securitybanking: DEBUG
+
