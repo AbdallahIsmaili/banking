@@ -40,3 +40,10 @@ logging:
     org.hibernate.SQL: DEBUG
     org.hibernate.type.descriptor.sql.BasicBinder: TRACE
     org.flywaydb: DEBUG
+
+app:
+  jwt:
+    secret-key: "mySecretKey123456789012345678901234567890" # Changez en production
+    expiration: 86400000 # 24 heures en millisecondes
+    refresh-expiration: 604800000 # 7 jours
+    issuer: "banking-service"
