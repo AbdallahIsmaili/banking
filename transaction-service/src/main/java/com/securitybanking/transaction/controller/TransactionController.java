@@ -1,13 +1,25 @@
 package com.securitybanking.transaction.controller;
 
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RestController;
+import com.securitybanking.transaction.dto.TransactionRequest;
+import com.securitybanking.transaction.entity.Transaction;
+import com.securitybanking.transaction.service.TransactionService;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
+@RequestMapping("/api/transactions")
 public class TransactionController {
 
-    @GetMapping("/api/transactions/hello")
-    public String hello() {
-        return "Hello from Transaction Service";
+    private final TransactionService transactionService;
+
+    public TransactionController(TransactionService transactionService) {
+        this.transactionService = transactionService;
+    }
+
+    @PostMapping
+    public ResponseEntity<Transaction> createTransaction(@RequestBody TransactionRequest request) {
+        Transaction tx = transactionService.createTransaction(request);
+        return new ResponseEntity<>(tx, HttpStatus.CREATED);
     }
 }
