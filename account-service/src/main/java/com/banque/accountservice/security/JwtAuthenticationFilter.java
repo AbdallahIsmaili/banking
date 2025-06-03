@@ -36,20 +36,26 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         try {
             String jwt = getJwtFromRequest(request);
 
+            // Vérification du token et validation
             if (StringUtils.hasText(jwt) && jwtService.validateToken(jwt)) {
                 String username = jwtService.getUsernameFromToken(jwt);
                 List<GrantedAuthority> authorities = jwtService.getAuthoritiesFromToken(jwt);
 
-                UsernamePasswordAuthenticationToken authentication =
-                        new UsernamePasswordAuthenticationToken(username, null, authorities);
+                // Vérification que l'utilisateur n'est pas déjà authentifié
+                if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                    UsernamePasswordAuthenticationToken authentication =
+                            new UsernamePasswordAuthenticationToken(username, null, authorities);
 
-                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authentication);
+                    authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
 
-                logger.debug("User '{}' authenticated with roles: {}", username, authorities);
+                    logger.debug("User '{}' authenticated with roles: {}", username, authorities);
+                }
             }
         } catch (Exception ex) {
             logger.error("Cannot set user authentication: {}", ex.getMessage());
+            // Nettoyer le contexte de sécurité en cas d'erreur
+            SecurityContextHolder.clearContext();
         }
 
         filterChain.doFilter(request, response);
