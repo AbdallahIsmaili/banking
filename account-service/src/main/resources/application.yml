@@ -4,18 +4,16 @@ server:
 spring:
   application:
     name: account-service
-
   datasource:
     url: jdbc:mysql://localhost:3306/accountdb?createDatabaseIfNotExist=true
     username: root
     password:
     driver-class-name: com.mysql.cj.jdbc.Driver
-
   jpa:
     hibernate:
-      ddl-auto: none       # Flyway va gérer le schéma, donc laissez toujours ddl-auto à "none" en production
-    show-sql: true         # Active logging SQL
-    open-in-view: false    # Empêche les problèmes de session Hibernate v
+      ddl-auto: none
+    show-sql: true
+    open-in-view: false
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQLDialect
@@ -29,6 +27,11 @@ spring:
     out-of-order: true
     baseline-version: 0
 
+# Configuration JWT - Compatible avec JwtProperties
+jwt:
+  secret-key: EEQLjAtCuNXlnTiKAvGxrWOeNAQ1vDUFwYo9w2kmAzIPY8U/7bjeyUGEb4GKAgD3xZVVZtjM3zXibMWHndfU8A==
+  expiration: 900000  # 15 minutes en millisecondes pour access token
+
 feign:
   client:
     config:
@@ -40,10 +43,3 @@ logging:
     org.hibernate.SQL: DEBUG
     org.hibernate.type.descriptor.sql.BasicBinder: TRACE
     org.flywaydb: DEBUG
-
-app:
-  jwt:
-    secret-key: "mySecretKey123456789012345678901234567890" # Changez en production
-    expiration: 86400000 # 24 heures en millisecondes
-    refresh-expiration: 604800000 # 7 jours
-    issuer: "banking-service"

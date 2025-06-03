@@ -268,17 +268,16 @@ public class AccountServiceImpl implements AccountService {
         Account account = accountRepository.findById(accountUpdateDTO.getId())
                 .orElseThrow(() -> new AccountNotFoundException(accountUpdateDTO.getId()));
 
-        // Ne pas permettre la modification du numéro de compte si existant
-        if (!account.getAccountNumber().equals(accountUpdateDTO.getAccountNumber())) {
-            throw new IllegalArgumentException("Account number cannot be modified");
-        }
-
-        // Mise à jour des informations modifiables
+        // Update allowed fields only
         if (accountUpdateDTO.getAccountType() != null) {
             account.setAccountType(AccountType.valueOf(accountUpdateDTO.getAccountType()));
         }
-
-        // Ajouter d'autres mises à jour selon les champs modifiables
+        if (accountUpdateDTO.getActive() != null) {
+            account.setActive(accountUpdateDTO.getActive());
+        }
+        if (accountUpdateDTO.getBalance() != null) {
+            account.setBalance(accountUpdateDTO.getBalance());
+        }
 
         account.setUpdatedAt(LocalDateTime.now());
         Account updatedAccount = accountRepository.save(account);

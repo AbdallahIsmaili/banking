@@ -10,6 +10,7 @@ import io.jsonwebtoken.security.Keys;
 import java.security.Key;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
@@ -26,8 +27,18 @@ public class JwtUtil {
 
     public String generateAccessToken(String email, UserRole role) {
         Map<String, Object> claims = new HashMap<>();
-        claims.put("role", role.name());
+        claims.put("roles", List.of(role.name())); // Always as a list
         return buildToken(claims, email, accessTokenExpiration);
+    }
+
+    @SuppressWarnings("unchecked")
+    public List<String> extractRoles(String token) {
+        List<?> roles = extractClaim(token, claims -> claims.get("roles", List.class));
+        if (roles == null) {
+            return List.of();
+        }
+        // Ensure all elements are strings
+        return roles.stream().map(Object::toString).toList();
     }
 
     public String generateRefreshToken(String email) {

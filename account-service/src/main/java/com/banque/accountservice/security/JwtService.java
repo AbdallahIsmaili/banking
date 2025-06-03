@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import javax.crypto.SecretKey;
 import java.util.Date;
@@ -26,10 +27,24 @@ public class JwtService {
     @Autowired
     public JwtService(JwtProperties jwtProperties) {
         this.jwtProperties = jwtProperties;
-        this.secretKey = Keys.hmacShaKeyFor(jwtProperties.getSecretKey().getBytes());
+
+        // Protection contre les valeurs null
+        String secret = jwtProperties.getSecretKey();
+        if (!StringUtils.hasText(secret)) {
+            // Clé par défaut pour éviter l'erreur - À NE PAS UTILISER EN PRODUCTION
+            logger.warn("ATTENTION: jwt.secret-key est null ou vide. Utilisation d'une clé par défaut.");
+            secret = "defaultSecretKey123456789012345678901234567890123456789012345678901234567890";
+        }
+
+        this.secretKey = Keys.hmacShaKeyFor(secret.getBytes());
+        logger.info("JwtService initialisé avec succès");
     }
 
     public boolean validateToken(String token) {
+        if (!StringUtils.hasText(token)) {
+            return false;
+        }
+
         try {
             Jwts.parser()
                     .verifyWith(secretKey)
@@ -88,7 +103,23 @@ public class JwtService {
             Claims claims = getClaimsFromToken(token);
             return claims.getExpiration().before(new Date());
         } catch (Exception e) {
+            logger.debug("Error checking token expiration: {}", e.getMessage());
             return true;
         }
+    }
+
+    // Méthode utilitaire pour créer un token (si vous en avez besoin)
+    public String generateToken(String username, List<String> roles, Long userId) {
+        Date now = new Date();
+        Date expiryDate = new Date(now.getTime() + jwtProperties.getExpiration());
+
+        return Jwts.builder()
+                .subject(username)
+                .claim("roles", roles)
+                .claim("userId", userId)
+                .issuedAt(now)
+                .expiration(expiryDate)
+                .signWith(secretKey)
+                .compact();
     }
 }

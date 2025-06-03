@@ -1,12 +1,12 @@
 package com.banque.accountservice.dto;
 
-
 import lombok.Data;
 
 @Data
 public class AccountUpdateDTO {
     private Long id;
-    private String accountNumber;
-    private String accountType; // Si vous autorisez le changement de type de compte
-    // Ajoutez d'autres champs modifiables selon vos besoins
+    private String accountType; // Allow changing type if needed
+    private Boolean active;
+    private java.math.BigDecimal balance;
+    // Add other updatable fields as needed, but DO NOT include accountNumber
 }
