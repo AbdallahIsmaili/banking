@@ -37,37 +37,34 @@ public class JwtFilter extends OncePerRequestFilter {
             "/oauth2",
             "/login",
             "/api/test/public",
-            "/"
-    );
+            "/");
 
     private final JwtUtil jwtUtil;
     private final UserRepository userRepository;
     private final BlacklistedTokenRepository blacklistedTokenRepository;
 
-    public JwtFilter(JwtUtil jwtUtil, UserRepository userRepository, BlacklistedTokenRepository blacklistedTokenRepository) {
+    public JwtFilter(JwtUtil jwtUtil, UserRepository userRepository,
+            BlacklistedTokenRepository blacklistedTokenRepository) {
         this.jwtUtil = jwtUtil;
         this.userRepository = userRepository;
         this.blacklistedTokenRepository = blacklistedTokenRepository;
     }
 
+    // cette methode est change
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getRequestURI();
         log.debug("Request path: {}", path);
 
-        // Always check Authorization header for JWT tokens regardless of path
-        String authHeader = request.getHeader("Authorization");
-        if (StringUtils.hasText(authHeader) && authHeader.startsWith("Bearer ")) {
-            return false; // Always process when a token is provided
-        }
-
-        // Skip filter for public paths without tokens
+        // ✅ 1. Skip filter for public paths (always allow them)
         for (String publicPath : PUBLIC_PATHS) {
             if (path.startsWith(publicPath)) {
                 log.debug("Path {} is public, skipping filter", path);
                 return true;
             }
         }
+
+        // ❌ 2. For all other paths, apply filter (even if no token)
         return false;
     }
 
@@ -75,8 +72,7 @@ public class JwtFilter extends OncePerRequestFilter {
     protected void doFilterInternal(
             HttpServletRequest request,
             HttpServletResponse response,
-            FilterChain filterChain
-    ) throws ServletException, IOException {
+            FilterChain filterChain) throws ServletException, IOException {
         try {
             // Skip if the user is already authenticated via OAuth2
             if (SecurityContextHolder.getContext().getAuthentication() instanceof OAuth2AuthenticationToken) {
@@ -131,14 +127,12 @@ public class JwtFilter extends OncePerRequestFilter {
 
                     // Create granted authorities from the user role
                     var authorities = Collections.singletonList(
-                            new SimpleGrantedAuthority("ROLE_" + user.getRole().name())
-                    );
+                            new SimpleGrantedAuthority("ROLE_" + user.getRole().name()));
 
                     var authentication = new UsernamePasswordAuthenticationToken(
                             email, // Use email as principal instead of User object
-                            null,  // No credentials needed here
-                            authorities
-                    );
+                            null, // No credentials needed here
+                            authorities);
                     authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                 } else {
