@@ -16,10 +16,10 @@ public class Transaction {
     private BigDecimal amount;
 
     @Column(nullable = false)
-    private Long sourceAccountId;
+    private String sourceAccountId;
 
     @Column
-    private Long destinationAccountId;
+    private String destinationAccountId;
 
     @Column(nullable = false)
     private LocalDateTime transactionDate;
@@ -27,7 +27,7 @@ public class Transaction {
     public Transaction() {
     }
 
-    public Transaction(BigDecimal amount, Long sourceAccountId, Long destinationAccountId,
+    public Transaction(BigDecimal amount, String sourceAccountId, String destinationAccountId,
             LocalDateTime transactionDate) {
         this.amount = amount;
         this.sourceAccountId = sourceAccountId;
@@ -52,19 +52,19 @@ public class Transaction {
         this.amount = amount;
     }
 
-    public Long getSourceAccountId() {
+    public String getSourceAccountId() {
         return sourceAccountId;
     }
 
-    public void setSourceAccountId(Long sourceAccountId) {
+    public void setSourceAccountId(String sourceAccountId) {
         this.sourceAccountId = sourceAccountId;
     }
 
-    public Long getDestinationAccountId() {
+    public String getDestinationAccountId() {
         return destinationAccountId;
     }
 
-    public void setDestinationAccountId(Long destinationAccountId) {
+    public void setDestinationAccountId(String destinationAccountId) {
         this.destinationAccountId = destinationAccountId;
     }
 
