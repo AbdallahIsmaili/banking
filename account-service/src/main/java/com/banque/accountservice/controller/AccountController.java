@@ -26,7 +26,14 @@ public class AccountController {
     public AccountController(AccountService accountService) {
         this.accountService = accountService;
     }
+// account-service/src/main/java/com/banque/accountservice/controller/AccountController.java
 
+    @GetMapping("/{accountNumber}/client")
+    @PreAuthorize("hasAnyRole('USER', 'EMPLOYEE', 'ADMIN')")
+    public ResponseEntity<String> getClientEmailByAccountNumber(@PathVariable String accountNumber) {
+        String email = accountService.getClientEmailByAccountNumber(accountNumber);
+        return ResponseEntity.ok(email);
+    }
     @PostMapping
     @PreAuthorize("hasAnyRole('EMPLOYEE', 'ADMIN')")
     public ResponseEntity<AccountResponseDTO> createAccount(@Valid @RequestBody AccountCreationDTO accountCreationDTO) {

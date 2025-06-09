@@ -36,7 +36,17 @@ public class AccountServiceImpl implements AccountService {
         public static final BigDecimal CURRENT_ACCOUNT_MIN_BALANCE = BigDecimal.ZERO;
         public static final BigDecimal SAVINGS_ACCOUNT_MIN_BALANCE = new BigDecimal("100.00");
     }
-
+// account-service/src/main/java/com/banque/accountservice/service/AccountServiceImpl.java
+    @Override
+    @Transactional(readOnly = true)
+    public String getClientEmailByAccountNumber(String accountNumber) {
+        Account account = accountRepository.findByAccountNumber(accountNumber)
+                .orElseThrow(() -> new AccountNotFoundException(accountNumber, "account number"));
+        if (account.getClient() == null) {
+            throw new RuntimeException("Client not found for this account");
+        }
+        return account.getClient().getEmail();
+    }
     // Adding missing BusinessRuleException class
     private static class BusinessRuleException extends RuntimeException {
         public BusinessRuleException(String message) {
