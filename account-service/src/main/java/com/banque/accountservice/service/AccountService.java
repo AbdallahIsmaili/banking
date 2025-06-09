@@ -10,6 +10,10 @@ import java.util.List;
 
 public interface AccountService {
 
+
+    // account-service/src/main/java/com/banque/accountservice/service/AccountService.java
+
+    String getClientEmailByAccountNumber(String accountNumber);
     /**
      * Update account information
      *
