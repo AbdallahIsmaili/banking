@@ -48,36 +48,29 @@ public class TransactionService {
             throw new IllegalArgumentException("Solde insuffisant dans le compte source");
         }
 
-        // 3. Débiter le compte source
+        // Débiter le compte source
         ResponseEntity<Void> debitResponse = accountClient.updateBalance(sourceId, amount.negate());
         if (!debitResponse.getStatusCode().is2xxSuccessful()) {
             throw new IllegalStateException("Erreur lors du débit du compte source");
         }
 
-        // 4. Créditer le compte destination
+        // Créditer le compte destination
         ResponseEntity<Void> creditResponse = accountClient.updateBalance(destId, amount);
         if (!creditResponse.getStatusCode().is2xxSuccessful()) {
             // Optionnel : rollback du débit (selon ton système, ex: Saga pattern)
             throw new IllegalStateException("Erreur lors du crédit du compte destination");
         }
 
-        // 5. Créer la transaction
+        // Créer la transaction
         Transaction tx = new Transaction();
         tx.setAmount(amount);
         tx.setSourceAccountId(sourceId);
         tx.setDestinationAccountId(destId);
         tx.setTransactionDate(LocalDateTime.now());
 
-        ClientDTO client = accountClient.getClientByAccountNumber(request.getSourceAccountId());
-        String email = client.getEmail();
+        String email = accountClient.getClientByAccountNumber(request.getSourceAccountId());
 
         // Envoyer une notification
-        EmailRequest emailRequest = new EmailRequest();
-        emailRequest.setTo(email);
-        emailRequest.setSubject("Confirmation de transaction");
-        emailRequest.setBody("Votre transaction de " + request.getAmount() + " a été effectuée avec succès.");
-
-        notificationClient.sendEmail(emailRequest);
 
         return transactionRepository.save(tx);
     }

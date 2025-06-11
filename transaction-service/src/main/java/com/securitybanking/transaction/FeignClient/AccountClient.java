@@ -25,5 +25,5 @@ public interface AccountClient {
                         @RequestParam BigDecimal amount);
 
         @GetMapping("/api/accounts/{accountNumber}/client")
-        ClientDTO getClientByAccountNumber(@PathVariable("accountNumber") String accountNumber);
+        String getClientByAccountNumber(@PathVariable("accountNumber") String accountNumber);
 }
