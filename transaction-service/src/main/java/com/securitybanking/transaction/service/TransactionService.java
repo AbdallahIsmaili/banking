@@ -72,6 +72,17 @@ public class TransactionService {
 
         // Envoyer une notification
 
+        /*
+         * EmailRequest emailRequest = new EmailRequest();
+         * emailRequest.setTo(email);
+         * emailRequest.setSubject("Confirmation de transaction");
+         * emailRequest.setBody("Votre transaction de " + request.getAmount() +
+         * " a été effectuée avec succès.");
+         * 
+         * notificationClient.sendEmail(emailRequest);
+         * 
+         */
+
         return transactionRepository.save(tx);
     }
 }

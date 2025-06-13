@@ -18,6 +18,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/accounts")
+@CrossOrigin(origins = "http://localhost:8080")
 public class AccountController {
 
     private final AccountService accountService;
@@ -26,7 +27,7 @@ public class AccountController {
     public AccountController(AccountService accountService) {
         this.accountService = accountService;
     }
-// account-service/src/main/java/com/banque/accountservice/controller/AccountController.java
+    // account-service/src/main/java/com/banque/accountservice/controller/AccountController.java
 
     @GetMapping("/{accountNumber}/client")
     @PreAuthorize("hasAnyRole('USER', 'EMPLOYEE', 'ADMIN')")
@@ -34,6 +35,7 @@ public class AccountController {
         String email = accountService.getClientEmailByAccountNumber(accountNumber);
         return ResponseEntity.ok(email);
     }
+
     @PostMapping
     @PreAuthorize("hasAnyRole('EMPLOYEE', 'ADMIN')")
     public ResponseEntity<AccountResponseDTO> createAccount(@Valid @RequestBody AccountCreationDTO accountCreationDTO) {
@@ -61,6 +63,7 @@ public class AccountController {
         List<AccountDTO> accounts = accountService.getAccountsByClientId(clientId);
         return ResponseEntity.ok(accounts);
     }
+
     @GetMapping("/type/{accountType}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<AccountResponseDTO>> getAccountsByType(@PathVariable AccountType accountType) {
@@ -113,6 +116,7 @@ public class AccountController {
         boolean hasSufficientBalance = accountService.hasSufficientBalance(accountNumber, amount);
         return ResponseEntity.ok(hasSufficientBalance);
     }
+
     @PutMapping("/{accountId}")
     @PreAuthorize("hasAnyRole('USER', 'EMPLOYEE', 'ADMIN')")
     public ResponseEntity<AccountDTO> updateAccountInfo(
