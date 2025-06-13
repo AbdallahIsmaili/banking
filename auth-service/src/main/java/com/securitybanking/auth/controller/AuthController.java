@@ -20,6 +20,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
+@CrossOrigin(origins = "http://localhost:8080")
 public class AuthController {
 
     private final AuthService authService;
@@ -29,8 +30,7 @@ public class AuthController {
     public AuthController(
             AuthService authService,
             JwtUtil jwtUtil,
-            BlacklistedTokenRepository blacklistedTokenRepository
-    ) {
+            BlacklistedTokenRepository blacklistedTokenRepository) {
         this.authService = authService;
         this.jwtUtil = jwtUtil;
         this.blacklistedTokenRepository = blacklistedTokenRepository;
@@ -85,7 +85,8 @@ public class AuthController {
             String token = authHeader.substring(7);
             try {
                 String email = jwtUtil.extractEmail(token);
-                if (email != null && !jwtUtil.isTokenExpired(token) && !blacklistedTokenRepository.existsByToken(token)) {
+                if (email != null && !jwtUtil.isTokenExpired(token)
+                        && !blacklistedTokenRepository.existsByToken(token)) {
                     return ResponseEntity.ok(authService.getUserProfile(email));
                 }
             } catch (Exception e) {

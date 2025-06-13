@@ -37,8 +37,7 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                )
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/login", "/api/auth/register", "/api/auth/refresh").permitAll()
                         .requestMatchers("/api/auth/").permitAll() // Public API endpoints
@@ -46,12 +45,12 @@ public class SecurityConfig {
                         .requestMatchers("/error").permitAll() // Error pages
                         .requestMatchers(new AntPathRequestMatcher("/login/**")).permitAll()
                         .requestMatchers(new AntPathRequestMatcher("/oauth2/**")).permitAll()
-                        .anyRequest().authenticated()
-                )
+                        .anyRequest().authenticated())
                 .oauth2Login(oauth2 -> oauth2
                         .successHandler(oAuth2SuccessHandler)
                         .authorizationEndpoint(endpoint -> endpoint.baseUri("/oauth2/authorize"))
-                        .redirectionEndpoint(endpoint -> endpoint.baseUri("/login/oauth2/code/*")) // Default callback path
+                        .redirectionEndpoint(endpoint -> endpoint.baseUri("/login/oauth2/code/*")) // Default callback
+                                                                                                   // path
                 )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
@@ -61,7 +60,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Collections.singletonList("http://localhost:3000"));
+        configuration.setAllowedOrigins(Collections.singletonList("http://localhost:8080"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("authorization", "content-type", "x-auth-token"));
         configuration.setExposedHeaders(Arrays.asList("x-auth-token"));
