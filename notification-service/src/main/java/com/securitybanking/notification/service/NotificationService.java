@@ -65,9 +65,7 @@ public class NotificationService {
         }
     }
 
-    /**
-     * Mark all notifications as read for a client
-     */
+
     public void markAllAsRead(String clientId) {
         List<Notification> unreadNotifications = getUnreadNotifications(clientId);
         unreadNotifications.forEach(notification -> {
