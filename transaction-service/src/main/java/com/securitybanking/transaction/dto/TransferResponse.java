@@ -1,30 +1,28 @@
-// Transaction.java
-package com.securitybanking.transaction.entity;
+package com.securitybanking.transaction.dto;
 
-import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-@Entity
-@Table(name = "transactions")
-public class Transaction {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+public class TransferResponse {
     private Long id;
-
-    private String type; // DEPOT, RETRAIT, VIREMENT
-
-    @Column(name = "source_account_id")
     private String sourceAccountId;
-
-    @Column(name = "destination_account_id")
     private String destinationAccountId;
-
     private BigDecimal amount;
-
-    @Column(name = "transaction_date")
     private LocalDateTime transactionDate;
+    private String message;
+
+    public TransferResponse(Long id, String sourceAccountId, String destinationAccountId, BigDecimal amount,
+            LocalDateTime transactionDate, String message) {
+        this.id = id;
+        this.sourceAccountId = sourceAccountId;
+        this.destinationAccountId = destinationAccountId;
+        this.amount = amount;
+        this.transactionDate = transactionDate;
+        this.message = message;
+    }
+
+    public TransferResponse() {
+    }
 
     public Long getId() {
         return id;
@@ -32,14 +30,6 @@ public class Transaction {
 
     public void setId(Long id) {
         this.id = id;
-    }
-
-    public String getType() {
-        return type;
-    }
-
-    public void setType(String type) {
-        this.type = type;
     }
 
     public String getSourceAccountId() {
@@ -73,5 +63,15 @@ public class Transaction {
     public void setTransactionDate(LocalDateTime transactionDate) {
         this.transactionDate = transactionDate;
     }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
+    }
+
+    // Constructeurs + Getters & setters
 
 }
