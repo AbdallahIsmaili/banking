@@ -57,9 +57,3 @@ notification:
   service:
     url: http://localhost:8084
 
-spring:
-  security:
-    oauth2:
-      resourceserver:
-        jwt:
-          secret-key: your-secret-key
