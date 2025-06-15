@@ -1,12 +1,8 @@
 package com.securitybanking.transaction.controller;
 
-import com.securitybanking.transaction.dto.TransactionRequest;
-import com.securitybanking.transaction.entity.Transaction;
+import com.securitybanking.transaction.dto.*;
 import com.securitybanking.transaction.service.TransactionService;
 
-import jakarta.servlet.http.HttpServletRequest;
-
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,17 +16,21 @@ public class TransactionController {
         this.transactionService = transactionService;
     }
 
-    @PostMapping
-    public ResponseEntity<Transaction> createTransaction(@RequestBody TransactionRequest request) {
-        Transaction tx = transactionService.createTransaction(request);
-        return new ResponseEntity<>(tx, HttpStatus.CREATED);
+    // Virement (transfert entre deux comptes)
+    @PostMapping("/transfer")
+    public ResponseEntity<TransferResponse> transfer(@RequestBody TransferRequest request) {
+        return ResponseEntity.ok(transactionService.transfer(request));
     }
 
-    @GetMapping("/debug-auth")
-    public ResponseEntity<String> debugAuth(HttpServletRequest request) {
-        String authHeader = request.getHeader("Authorization");
-        System.out.println("Token reçu dans transaction-service: " + authHeader);
-        return ResponseEntity.ok("Token reçu");
+    // Dépôt sur un compte
+    @PostMapping("/deposit")
+    public ResponseEntity<DepositResponse> deposit(@RequestBody DepositRequest request) {
+        return ResponseEntity.ok(transactionService.deposit(request));
     }
 
+    // Retrait d'un compte
+    @PostMapping("/withdraw")
+    public ResponseEntity<WithdrawResponse> withdraw(@RequestBody WithdrawRequest request) {
+        return ResponseEntity.ok(transactionService.withdraw(request));
+    }
 }
