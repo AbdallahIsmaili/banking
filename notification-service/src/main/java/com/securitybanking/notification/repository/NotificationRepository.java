@@ -13,8 +13,7 @@ import java.util.List;
 public interface NotificationRepository extends JpaRepository<Notification, Long> {
 
     /**
-     * Find all notifications for a client ordered by sent date (newest first)
-     */
+      */
     List<Notification> findByClientIdOrderBySentAtDesc(String clientId);
 
     /**
