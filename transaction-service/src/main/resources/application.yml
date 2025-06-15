@@ -6,7 +6,6 @@ spring:
     url: jdbc:mysql://localhost:3306/transaction_db?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC
     username: root
     password: # Ajoutez votre mot de passe MySQL ici si nécessaire
-
   jpa:
     hibernate:
       ddl-auto: update
@@ -16,28 +15,16 @@ spring:
         dialect: org.hibernate.dialect.MySQL8Dialect
         format_sql: true
     database-platform: org.hibernate.dialect.MySQL8Dialect
-
   application:
     name: transaction-service
-
   cloud:
     loadbalancer:
       retry:
         enabled: true
 
-  security:
-    oauth2:
-      resourceserver:
-        jwt:
-          secret-key: your-secret-key
-
 account:
   service:
     url: http://localhost:8082
-
-notification:
-  service:
-    url: http://localhost:8084
 
 feign:
   client:
@@ -46,6 +33,7 @@ feign:
         connectTimeout: 5000
         readTimeout: 5000
         loggerLevel: full
+        # Configuration d'authentification
         requestInterceptors:
           - com.securitybanking.transaction.config.FeignAuthInterceptor
   circuitbreaker:
@@ -63,3 +51,15 @@ logging:
     org.hibernate.SQL: DEBUG
     org.hibernate.type.descriptor.sql.BasicBinder: TRACE
     com.securitybanking: DEBUG
+
+
+notification:
+  service:
+    url: http://localhost:8084
+
+spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          secret-key: your-secret-key
