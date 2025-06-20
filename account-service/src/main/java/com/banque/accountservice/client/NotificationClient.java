@@ -12,20 +12,20 @@ public interface NotificationClient {
 
     @PostMapping("/api/notifications/account-created/{clientId}")
     void sendAccountCreationNotification(@PathVariable("clientId") Long clientId,
-                                         @RequestParam("accountNumber") String accountNumber);
+            @RequestParam("accountNumber") String accountNumber);
 
     @PostMapping("/api/notifications/deposit/{clientId}")
     void sendDepositNotification(@PathVariable("clientId") Long clientId,
-                                 @RequestParam("accountNumber") String accountNumber,
-                                 @RequestParam("amount") BigDecimal amount);
+            @RequestParam("accountNumber") String accountNumber,
+            @RequestParam("amount") BigDecimal amount);
 
     @PostMapping("/api/notifications/withdrawal/{clientId}")
     void sendWithdrawalNotification(@PathVariable("clientId") Long clientId,
-                                    @RequestParam("accountNumber") String accountNumber,
-                                    @RequestParam("amount") BigDecimal amount);
+            @RequestParam("accountNumber") String accountNumber,
+            @RequestParam("amount") BigDecimal amount);
 
     @PostMapping("/api/notifications/account-closed/{clientId}")
     void sendAccountClosureNotification(@PathVariable("clientId") Long clientId,
-                                        @RequestParam("accountNumber") String accountNumber);
+            @RequestParam("accountNumber") String accountNumber);
 
 }

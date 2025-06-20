@@ -1,6 +1,5 @@
 package com.securitybanking.notification.controller;
 
-
 import com.securitybanking.notification.dto.NotificationRequest;
 import com.securitybanking.notification.model.Notification;
 import com.securitybanking.notification.service.NotificationService;
@@ -22,20 +21,18 @@ public class NotificationController {
      * Create a new notification when an account is created
      * This replaces the email sending functionality
      */
-    @PostMapping("/account-created")
-    public ResponseEntity<Notification> accountCreated(@RequestBody NotificationRequest request) {
+    @PostMapping("/account-created/{clientId}")
+    public ResponseEntity<Notification> accountCreated(@PathVariable String clientId,
+            @RequestParam String accountNumber) {
         try {
             Notification notification = notificationService.createNotification(
-                    request.getClientId(),
-                    request.getRecipient(),
+                    clientId,
+                    accountNumber,
                     "Account Created Successfully",
-                    "Welcome! Your account has been created successfully."
-            );
+                    "Welcome! Your account has been created successfully.");
             return ResponseEntity.ok(notification);
         } catch (Exception e) {
-            // Log the error for debugging
             System.err.println("Error creating notification: " + e.getMessage());
-            e.printStackTrace();
             return ResponseEntity.status(500).build();
         }
     }
@@ -50,8 +47,7 @@ public class NotificationController {
                     request.getClientId(),
                     request.getRecipient(),
                     request.getSubject() != null ? request.getSubject() : "Notification",
-                    request.getMessage()
-            );
+                    request.getMessage());
             return ResponseEntity.ok(notification);
         } catch (Exception e) {
             System.err.println("Error creating notification: " + e.getMessage());
@@ -59,9 +55,6 @@ public class NotificationController {
         }
     }
 
-    /**
-     * Get all notifications for a specific client
-     */
     @GetMapping("/client/{clientId}")
     public ResponseEntity<List<Notification>> getNotifications(@PathVariable String clientId) {
         try {
