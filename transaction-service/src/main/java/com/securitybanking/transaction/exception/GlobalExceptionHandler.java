@@ -2,11 +2,12 @@ package com.securitybanking.transaction.exception;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
-
+import org.springframework.security.access.AccessDeniedException;
 import jakarta.transaction.InvalidTransactionException;
 
 import java.util.HashMap;
@@ -38,19 +39,6 @@ public class GlobalExceptionHandler {
                 ex.getMessage(),
                 System.currentTimeMillis());
         return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
-    }
-
-    @ExceptionHandler({
-            // InsufficientBalanceException.class,
-            InvalidTransactionException.class,
-            // InvalidAmountException.class
-    })
-    public ResponseEntity<ErrorResponse> handleBadRequestExceptions(RuntimeException ex) {
-        ErrorResponse errorResponse = new ErrorResponse(
-                HttpStatus.BAD_REQUEST.value(),
-                ex.getMessage(),
-                System.currentTimeMillis());
-        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
 
     // Gestion des exceptions génériques
@@ -88,4 +76,16 @@ public class GlobalExceptionHandler {
             return timestamp;
         }
     }
+
+    @ExceptionHandler(AuthenticationCredentialsNotFoundException.class)
+    public ResponseEntity<String> handleAuthException(AuthenticationCredentialsNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Token JWT manquant ou invalide.");
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<String> handleAccessDenied(AccessDeniedException ex) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Accès refusé : rôle insuffisant.");
+    }
+
+    // SUPPRIMÉ : la deuxième méthode @ExceptionHandler(Exception.class)
 }

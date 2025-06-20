@@ -63,3 +63,7 @@ logging:
     org.hibernate.SQL: DEBUG
     org.hibernate.type.descriptor.sql.BasicBinder: TRACE
     com.securitybanking: DEBUG
+
+
+jwt:
+  secret: EEQLjAtCuNXlnTiKAvGxrWOeNAQ1vDUFwYo9w2kmAzIPY8U/7bjeyUGEb4GKAgD3xZVVZtjM3zXibMWHndfU8A==
