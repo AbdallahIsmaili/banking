@@ -83,6 +83,7 @@ public class AccountServiceImpl implements AccountService {
             // Create a new account entity
             Account account = new Account();
             Client client = new Client();
+
             client.setId(accountCreationDTO.getClientId()); // Assign client ID
             account.setClient(client);
 
@@ -95,10 +96,16 @@ public class AccountServiceImpl implements AccountService {
             // Save the account
             Account savedAccount = accountRepository.save(account);
 
-            // Send notification about account creation
-            sendNotification(() -> notificationClient.sendAccountCreationNotification(savedAccount.getClient().getId(), accountNumber),
-                    "Failed to send account creation notification");
 
+           // Envoi de la notification via FeignClient
+            try {
+                notificationClient.sendAccountCreationNotification(
+                        savedAccount.getClient().getId(),
+                        accountNumber
+                );
+            } catch (Exception e) {
+                LOGGER.error("Échec de l'envoi de la notification de création de compte : {}", e.getMessage());
+            }
             return AccountResponseDTO.success("Account created successfully", accountNumber);
 
         } catch (Exception ex) {
