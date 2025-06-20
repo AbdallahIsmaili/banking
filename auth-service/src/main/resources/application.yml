@@ -34,7 +34,7 @@ jwt:
   accessToken:
     expiration: 900000  # 15 minutes
   refreshToken:
-    expiration: 86400000  # 24 hours
+    expiration: 604800000  # 24 hours
 
 security:
   password:

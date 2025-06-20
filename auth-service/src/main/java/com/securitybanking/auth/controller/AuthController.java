@@ -9,19 +9,26 @@ import com.securitybanking.auth.service.AuthService;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
-@CrossOrigin(origins = "http://localhost:8080")
+@CrossOrigin(origins = "http://localhost:3000")
 public class AuthController {
+
+    private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
 
     private final AuthService authService;
     private final JwtUtil jwtUtil;
@@ -60,49 +67,116 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<Void> logout(HttpServletRequest request) {
-        String authHeader = request.getHeader("Authorization");
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            String token = authHeader.substring(7);
-            Date expiry = jwtUtil.extractExpiration(token);
-            blacklistedTokenRepository.save(new BlacklistedToken(token, expiry));
-        }
+    public ResponseEntity<Map<String, String>> logout(HttpServletRequest request) {
+        Map<String, String> response = new HashMap<>();
 
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null) {
-            authService.logout(authentication.getName());
+        try {
+            String authHeader = request.getHeader("Authorization");
+
+            if (authHeader != null && authHeader.startsWith("Bearer ")) {
+                String token = authHeader.substring(7);
+                String userEmail = null;
+
+                try {
+                    userEmail = jwtUtil.extractEmail(token);
+
+                    // Only process token if it's valid and not expired
+                    if (userEmail != null && !jwtUtil.isTokenExpired(token)) {
+                        // Blacklist the token
+                        Date expiry = jwtUtil.extractExpiration(token);
+                        blacklistedTokenRepository.save(new BlacklistedToken(token, expiry));
+
+                        // Clear refresh token from database
+                        authService.logout(userEmail);
+                    }
+                } catch (Exception e) {
+                    response.put("message", "Invalid token during logout: " + e.getMessage());
+                }
+            }
+
+            // Clear security context in all cases
             SecurityContextHolder.clearContext();
-        }
 
-        return ResponseEntity.noContent().build();
+            response.put("status", "success");
+            response.put("message", "Logout completed");
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", "Error during logout");
+            return ResponseEntity.status(500).body(response);
+        }
     }
 
     @GetMapping("/profile")
-    public ResponseEntity<UserProfileResponse> getProfile(HttpServletRequest request) {
-        // Use HttpServletRequest instead of relying on Spring's Authentication object
-        String authHeader = request.getHeader("Authorization");
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            String token = authHeader.substring(7);
-            try {
-                String email = jwtUtil.extractEmail(token);
-                if (email != null && !jwtUtil.isTokenExpired(token)
-                        && !blacklistedTokenRepository.existsByToken(token)) {
-                    return ResponseEntity.ok(authService.getUserProfile(email));
-                }
-            } catch (Exception e) {
-                // Log the exception
-                System.err.println("Error processing token: " + e.getMessage());
-            }
+    public ResponseEntity<?> getProfile(Principal principal, HttpServletRequest request) {
+        Map<String, Object> response = new HashMap<>();
+
+        logger.debug("Profile endpoint called");
+        logger.debug("Principal: {}", principal);
+
+        // Get authentication from security context
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        logger.debug("Authentication: {}", authentication);
+        logger.debug("Authentication class: {}", authentication != null ? authentication.getClass().getSimpleName() : "null");
+
+        if (authentication == null || !authentication.isAuthenticated()) {
+            logger.warn("No authentication found or not authenticated");
+            response.put("status", "error");
+            response.put("authenticated", false);
+            response.put("message", "No user is currently authenticated");
+            return ResponseEntity.status(401).body(response);
         }
 
-        // If reaching here, authentication failed
-        return ResponseEntity.status(401).build();
+        try {
+            String email = null;
+            String authMethod = "UNKNOWN";
+
+            // Handle different authentication types
+            if (authentication instanceof OAuth2AuthenticationToken) {
+                logger.debug("Processing OAuth2 authentication");
+                OAuth2AuthenticationToken oauth2Token = (OAuth2AuthenticationToken) authentication;
+                OAuth2User oauth2User = oauth2Token.getPrincipal();
+                email = (String) oauth2User.getAttributes().get("email");
+                authMethod = "OAUTH2";
+                logger.debug("OAuth2 email: {}", email);
+            } else {
+                // For JWT authentication, the principal name should be the email
+                email = authentication.getName();
+                authMethod = "JWT";
+                logger.debug("JWT email: {}", email);
+            }
+
+            if (email == null || email.isEmpty()) {
+                logger.error("Could not extract email from authentication");
+                response.put("status", "error");
+                response.put("message", "Could not extract user email from authentication");
+                return ResponseEntity.status(500).body(response);
+            }
+
+            UserProfileResponse userProfile = authService.getUserProfile(email);
+            logger.debug("Retrieved user profile: {}", userProfile);
+
+            response.put("status", "success");
+            response.put("authenticated", true);
+            response.put("user", userProfile);
+            response.put("authMethod", authMethod);
+            response.put("message", "Profile retrieved successfully");
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            logger.error("Error retrieving profile", e);
+            response.put("status", "error");
+            response.put("message", "Error retrieving profile: " + e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
     }
 
     @GetMapping("/oauth2/success")
-    public ResponseEntity<String> oauthSuccess() {
-        // This endpoint is just to confirm the OAuth2 flow completed successfully
-        // Actual redirects are handled by OAuth2SuccessHandler
-        return ResponseEntity.ok("OAuth2 authentication successful");
+    public ResponseEntity<Map<String, String>> oauthSuccess() {
+        Map<String, String> response = new HashMap<>();
+        response.put("status", "success");
+        response.put("message", "OAuth2 authentication successful");
+        return ResponseEntity.ok(response);
     }
 }
