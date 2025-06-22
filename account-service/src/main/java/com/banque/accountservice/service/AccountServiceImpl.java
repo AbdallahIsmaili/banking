@@ -36,7 +36,8 @@ public class AccountServiceImpl implements AccountService {
         public static final BigDecimal CURRENT_ACCOUNT_MIN_BALANCE = BigDecimal.ZERO;
         public static final BigDecimal SAVINGS_ACCOUNT_MIN_BALANCE = new BigDecimal("100.00");
     }
-// account-service/src/main/java/com/banque/accountservice/service/AccountServiceImpl.java
+
+    // account-service/src/main/java/com/banque/accountservice/service/AccountServiceImpl.java
     @Override
     @Transactional(readOnly = true)
     public String getClientEmailByAccountNumber(String accountNumber) {
@@ -47,6 +48,7 @@ public class AccountServiceImpl implements AccountService {
         }
         return account.getClient().getEmail();
     }
+
     // Adding missing BusinessRuleException class
     private static class BusinessRuleException extends RuntimeException {
         public BusinessRuleException(String message) {
@@ -71,7 +73,8 @@ public class AccountServiceImpl implements AccountService {
     @Transactional
     public AccountResponseDTO createAccount(AccountCreationDTO accountCreationDTO) {
         // Validate inputs
-        if (accountCreationDTO == null || accountCreationDTO.getInitialDeposit() == null || accountCreationDTO.getClientId() == null) {
+        if (accountCreationDTO == null || accountCreationDTO.getInitialDeposit() == null
+                || accountCreationDTO.getClientId() == null) {
             LOGGER.error("Invalid account creation request: {}", accountCreationDTO);
             return AccountResponseDTO.failure("Invalid account creation request");
         }
@@ -96,13 +99,11 @@ public class AccountServiceImpl implements AccountService {
             // Save the account
             Account savedAccount = accountRepository.save(account);
 
-
-           // Envoi de la notification via FeignClient
+            // Envoi de la notification via FeignClient
             try {
                 notificationClient.sendAccountCreationNotification(
                         savedAccount.getClient().getId(),
-                        accountNumber
-                );
+                        accountNumber);
             } catch (Exception e) {
                 LOGGER.error("Échec de l'envoi de la notification de création de compte : {}", e.getMessage());
             }
@@ -121,6 +122,17 @@ public class AccountServiceImpl implements AccountService {
                 .orElseThrow(() -> new AccountNotFoundException(accountId));
 
         return convertToDTO(account);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Long getClientIdByAccountNumber(String accountNumber) {
+        Account account = accountRepository.findByAccountNumber(accountNumber)
+                .orElseThrow(() -> new AccountNotFoundException(accountNumber, "account number"));
+        if (account.getClient() == null) {
+            throw new RuntimeException("Client not found for this account");
+        }
+        return account.getClient().getId();
     }
 
     @Override
@@ -161,7 +173,6 @@ public class AccountServiceImpl implements AccountService {
                 .collect(Collectors.toList());
     }
 
-
     @Override
     @Transactional
     public AccountResponseDTO updateAccountStatus(Long accountId, boolean active) {
@@ -178,8 +189,7 @@ public class AccountServiceImpl implements AccountService {
             // Use the appropriate parameters for your NotificationClient implementation
             notificationClient.sendAccountCreationNotification(
                     account.getClient().getId(),
-                    account.getAccountNumber()
-            );
+                    account.getAccountNumber());
         } catch (Exception e) {
             LOGGER.error("Failed to send account status change notification: {}", e.getMessage());
         }
@@ -210,10 +220,14 @@ public class AccountServiceImpl implements AccountService {
 
         // Send notification about balance update
         if (amount.compareTo(BigDecimal.ZERO) > 0) {
-            sendNotification(() -> notificationClient.sendDepositNotification(account.getClient().getId(), accountNumber, amount),
+            sendNotification(
+                    () -> notificationClient.sendDepositNotification(account.getClient().getId(), accountNumber,
+                            amount),
                     "Failed to send deposit notification");
         } else {
-            sendNotification(() -> notificationClient.sendWithdrawalNotification(account.getClient().getId(), accountNumber, amount.abs()),
+            sendNotification(
+                    () -> notificationClient.sendWithdrawalNotification(account.getClient().getId(), accountNumber,
+                            amount.abs()),
                     "Failed to send withdrawal notification");
         }
 
@@ -235,7 +249,9 @@ public class AccountServiceImpl implements AccountService {
         account.setUpdatedAt(LocalDateTime.now());
         accountRepository.save(account);
 
-        sendNotification(() -> notificationClient.sendAccountClosureNotification(account.getClient().getId(), account.getAccountNumber()),
+        sendNotification(
+                () -> notificationClient.sendAccountClosureNotification(account.getClient().getId(),
+                        account.getAccountNumber()),
                 "Failed to send account closure notification");
 
         return AccountResponseDTO.success("Account closed successfully", account.getAccountNumber());
@@ -328,8 +344,10 @@ public class AccountServiceImpl implements AccountService {
 
     private AccountResponseDTO mapToAccountResponseDTO(Account account) {
         // Create a response DTO manually since getters/setters aren't available
-        AccountResponseDTO responseDTO = AccountResponseDTO.success("Account retrieved successfully", account.getAccountNumber());
-        // We can't set other fields if there are no setters, so we'll just return the basic response
+        AccountResponseDTO responseDTO = AccountResponseDTO.success("Account retrieved successfully",
+                account.getAccountNumber());
+        // We can't set other fields if there are no setters, so we'll just return the
+        // basic response
         return responseDTO;
     }
 }

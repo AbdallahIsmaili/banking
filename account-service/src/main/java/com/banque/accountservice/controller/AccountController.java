@@ -36,6 +36,13 @@ public class AccountController {
         return ResponseEntity.ok(email);
     }
 
+    @GetMapping("/{accountNumber}/client-id")
+    @PreAuthorize("hasAnyRole('USER', 'EMPLOYEE', 'ADMIN')")
+    public ResponseEntity<Long> getClientIdByAccountNumber(@PathVariable String accountNumber) {
+        Long clientId = accountService.getClientIdByAccountNumber(accountNumber);
+        return ResponseEntity.ok(clientId);
+    }
+
     @PostMapping
     @PreAuthorize("hasAnyRole('EMPLOYEE', 'ADMIN')")
     public ResponseEntity<AccountResponseDTO> createAccount(@Valid @RequestBody AccountCreationDTO accountCreationDTO) {

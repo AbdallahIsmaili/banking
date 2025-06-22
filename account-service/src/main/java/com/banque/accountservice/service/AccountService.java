@@ -1,19 +1,17 @@
 package com.banque.accountservice.service;
 
 import com.banque.accountservice.dto.*;
-import com.banque.accountservice.dto.AccountResponseDTO;
 import com.banque.accountservice.model.AccountType;
-
 
 import java.math.BigDecimal;
 import java.util.List;
 
 public interface AccountService {
 
-
     // account-service/src/main/java/com/banque/accountservice/service/AccountService.java
 
     String getClientEmailByAccountNumber(String accountNumber);
+
     /**
      * Update account information
      *
@@ -74,21 +72,20 @@ public interface AccountService {
      * Update the balance of an account
      *
      * @param accountNumber The account number
-     * @param amount The amount to update (positive for credit, negative for debit)
+     * @param amount        The amount to update (positive for credit, negative for
+     *                      debit)
      * @return Updated account details
      */
     AccountDTO updateBalance(String accountNumber, BigDecimal amount);
-
 
     /**
      * Updates account active status
      *
      * @param accountId Account ID
-     * @param active New active status
+     * @param active    New active status
      * @return Updated account details
      */
     AccountResponseDTO updateAccountStatus(Long accountId, boolean active);
-
 
     /**
      * Close an account
@@ -110,8 +107,17 @@ public interface AccountService {
      * Check if an account has sufficient balance for a withdrawal
      *
      * @param accountNumber The account number
-     * @param amount The amount to check
+     * @param amount        The amount to check
      * @return true if balance is sufficient, false otherwise
      */
     boolean hasSufficientBalance(String accountNumber, BigDecimal amount);
+
+    /**
+     * Récupère l'ID du client à partir du numéro de compte
+     * 
+     * @param accountNumber Le numéro de compte
+     * @return L'ID du client
+     */
+    Long getClientIdByAccountNumber(String accountNumber);
+
 }

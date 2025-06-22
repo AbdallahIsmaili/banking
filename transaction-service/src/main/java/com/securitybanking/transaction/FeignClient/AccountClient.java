@@ -26,4 +26,8 @@ public interface AccountClient {
 
         @GetMapping("/api/accounts/{accountNumber}/client")
         String getClientByAccountNumber(@PathVariable("accountNumber") String accountNumber);
+
+        // Ajoute cette méthode pour récupérer l'ID du client (type Long)
+        @GetMapping("/api/accounts/{accountNumber}/client-id")
+        Long getClientIdByAccountNumber(@PathVariable("accountNumber") String accountNumber);
 }

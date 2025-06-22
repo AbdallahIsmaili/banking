@@ -1,6 +1,5 @@
 package com.securitybanking.notification.service;
 
-
 import com.securitybanking.notification.model.Notification;
 import com.securitybanking.notification.model.NotificationStatus;
 import com.securitybanking.notification.model.NotificationType;
@@ -19,13 +18,15 @@ public class NotificationService {
 
     @Autowired
     private NotificationRepository notificationRepository;
+    @Autowired
+    private EmailService emailService;
 
     /**
      * Create a new notification and store it in the database
      * This replaces the email sending functionality
      */
     public Notification createNotification(String clientId, String recipient,
-                                           String subject, String message) {
+            String subject, String message) {
         Notification notification = new Notification();
         notification.setClientId(clientId);
         notification.setRecipient(recipient);
@@ -35,7 +36,17 @@ public class NotificationService {
         notification.setStatus(NotificationStatus.SENT);
         notification.setSentAt(LocalDateTime.now());
 
-        return notificationRepository.save(notification);
+        Notification saved = notificationRepository.save(notification);
+
+        // Envoi de l'email en plus de la notification in-app
+        try {
+            emailService.sendEmail(clientId, subject, message);
+        } catch (Exception e) {
+            System.err.println("Erreur lors de l'envoi de l'e-mail : " + e.getMessage());
+            // Tu peux aussi enregistrer une notification d'échec si tu veux
+        }
+
+        return saved;
     }
 
     /**
@@ -64,7 +75,6 @@ public class NotificationService {
             notificationRepository.save(notification.get());
         }
     }
-
 
     public void markAllAsRead(String clientId) {
         List<Notification> unreadNotifications = getUnreadNotifications(clientId);
