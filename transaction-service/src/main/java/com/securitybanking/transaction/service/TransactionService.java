@@ -1,20 +1,11 @@
 package com.securitybanking.transaction.service;
 
-import com.securitybanking.transaction.dto.ClientDTO;
-import com.securitybanking.transaction.dto.DepositRequest;
-import com.securitybanking.transaction.dto.DepositResponse;
-import com.securitybanking.transaction.dto.EmailRequest;
-import com.securitybanking.transaction.dto.TransactionRequest;
-import com.securitybanking.transaction.dto.TransferRequest;
-import com.securitybanking.transaction.dto.TransferResponse;
-import com.securitybanking.transaction.dto.WithdrawRequest;
-import com.securitybanking.transaction.dto.WithdrawResponse;
+import com.securitybanking.transaction.dto.*;
 import com.securitybanking.transaction.entity.Transaction;
 import com.securitybanking.transaction.repository.TransactionRepository;
 import com.securitybanking.transaction.FeignClient.AccountClient;
 import com.securitybanking.transaction.FeignClient.NotificationClient;
 
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,7 +22,8 @@ public class TransactionService {
     private final AccountClient accountClient;
     private final NotificationClient notificationClient;
 
-    public TransactionService(TransactionRepository transactionRepository, AccountClient accountClient,
+    public TransactionService(TransactionRepository transactionRepository,
+            AccountClient accountClient,
             NotificationClient notificationClient) {
         this.transactionRepository = transactionRepository;
         this.accountClient = accountClient;
@@ -106,6 +98,36 @@ public class TransactionService {
 
         Transaction tx = saveTransaction(sourceAccountId, destAccountId, request.getAmount(), "VIREMENT");
 
+        // --- NOTIFICATIONS ---
+        try {
+            // Récupérer infos client source
+            String sourceClientId = accountClient.getClientByAccountNumber(sourceAccountId);
+            // String sourceEmail = accountClient.getEmailByClientId(sourceClientId);
+
+            // Récupérer infos client destination
+            String destClientId = accountClient.getClientByAccountNumber(destAccountId);
+            // String destEmail = accountClient.getEmailByClientId(destClientId);
+
+            // Notification pour l'émetteur
+            NotificationRequest notifSource = new NotificationRequest(
+                    sourceClientId,
+                    sourceAccountId,
+                    "Virement envoyé",
+                    "Vous avez transféré " + request.getAmount() + " MAD vers le compte " + destAccountId);
+            notificationClient.sendGenericNotification(notifSource);
+
+            // Notification pour le bénéficiaire
+            NotificationRequest notifDest = new NotificationRequest(
+                    destClientId,
+                    destAccountId,
+                    "Virement reçu",
+                    "Vous avez reçu " + request.getAmount() + " MAD du compte " + mask(sourceAccountId));
+            notificationClient.sendGenericNotification(notifDest);
+
+        } catch (Exception e) {
+            logger.error("Erreur lors de l'envoi de la notification de virement : {}", e.getMessage());
+        }
+
         return buildTransferResponse(tx);
     }
 
@@ -122,6 +144,7 @@ public class TransactionService {
         tx.setAmount(amount);
         tx.setType(type);
         tx.setTransactionDate(LocalDateTime.now());
+
         return transactionRepository.save(tx);
     }
 
@@ -156,7 +179,6 @@ public class TransactionService {
         return response;
     }
 
-    // Masquage compte pour les logs
     private String mask(String accountId) {
         return accountId == null ? "" : "****" + accountId.substring(accountId.length() - 4);
     }

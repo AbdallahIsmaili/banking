@@ -37,9 +37,6 @@ public class NotificationController {
         }
     }
 
-    /**
-     * Create a generic notification
-     */
     @PostMapping
     public ResponseEntity<Notification> createNotification(@RequestBody NotificationRequest request) {
         try {

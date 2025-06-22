@@ -27,6 +27,23 @@ spring:
     baseline-on-migrate: true
     repair: true
 
+  mail:  #  DOIT ÊTRE ICI
+    host: smtp.gmail.com
+    port: 587
+    username: yassinechouayt7@gmail.com
+    password: zskt ilik uqym fqks
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
+          ssl:
+            trust: smtp.gmail.com
+
 logging:
   level:
     root: INFO

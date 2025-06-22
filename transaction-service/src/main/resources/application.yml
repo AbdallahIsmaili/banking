@@ -56,7 +56,7 @@ logging:
 
 jwt:
   secret: EEQLjAtCuNXlnTiKAvGxrWOeNAQ1vDUFwYo9w2kmAzIPY8U/7bjeyUGEb4GKAgD3xZVVZtjM3zXibMWHndfU8A==
-=======
+
 notification:
   service:
     url: http://localhost:8084
